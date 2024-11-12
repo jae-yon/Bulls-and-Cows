@@ -1,13 +1,9 @@
 import readline from 'readline';
-
 import { EventEmitter } from 'events';
 
 EventEmitter.defaultMaxListeners = 50;
 
-const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
-});
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
 
 gameStart();
 
@@ -16,7 +12,7 @@ function gameStart() {
   const randomNumber = createRandomNumber();
   rl.question("게임을 새로 시작하려면 1, 종료하려면 9를 입력하세요.\n", function(userInput) {
     switch (userInput) {
-      case "1":
+      case "1": 
         playBall(randomNumber);
         break;
       case "9":
@@ -36,12 +32,10 @@ function gameStart() {
 function playBall(randomNumber:number) {
   rl.question("숫자를 입력해주세요: ", (userInput) => {
     switch (userInput) {
-      
       case "2":
         console.log("애플리케이션이 종료되었습니다.");
         rl.close();
         break;
-
       default:
         if (validateNumber(Number(userInput)) === false) {
           console.log("1~9 중 서로 중복되지 않는 숫자 3개를 선택해주세요.\n");
@@ -93,11 +87,7 @@ function createRandomNumber() {
 function compareNumber(comNum:number, userNum:number) {
   const comNumArr = String(comNum).split("");
   const userNumArr = String(userNum).split("");
-  const result = {
-    strike: 0,
-    ball: 0,
-    noting: 0,
-  }
+  const result = { strike: 0, ball: 0, noting: 0 }
   comNumArr.map((comNum, comNumIndex) => {
     userNumArr.some((userNum, userNumIndex) => {
       if (userNum === comNum && userNumIndex === comNumIndex) {
@@ -111,22 +101,3 @@ function compareNumber(comNum:number, userNum:number) {
   });
   return result;
 }
-
-// if (countLimit === 0) {
-//   console.log(`이걸 못 맞추네....정답은 ${randomNumber} 입니다.`);
-//   rl.close();
-// } else {
-//   console.log("1~9 서로 다른 임의의 수 3개를 선택");
-//   gamePlay(randomNumber, countLimit);
-// }
-
-// if (countLimit === 0) {
-//   console.log(`이걸 못 맞추네....정답은 [${randomNumber}] 입니다.`);
-//   rl.close();
-// } else {
-//   const ball = numCompare(randomNumber, Number(input)).ball;
-//   const strike = numCompare(randomNumber, Number(input)).strike;
-//   console.log(`${ball}볼 ${strike}스트라이크`);
-
-//   gamePlay(randomNumber, countLimit);
-// }
