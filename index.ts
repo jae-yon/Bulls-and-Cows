@@ -1,103 +1,128 @@
 import readline from 'readline';
-import { EventEmitter } from 'events';
-
-EventEmitter.defaultMaxListeners = 50;
-
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-
-gameStart();
-
-// 게임 실행
-function gameStart() {
-  const randomNumber = createRandomNumber();
-  rl.question("게임을 새로 시작하려면 1, 종료하려면 9를 입력하세요.\n", function(userInput) {
-    switch (userInput) {
-      case "1": 
-        playBall(randomNumber);
-        break;
-      case "9":
-        console.log("애플리케이션이 종료되었습니다.");
-        rl.close();
-        break;
-      default:
-        gameStart();
-        break;
-    }
-  });
-  rl.on("close", function() {
-    process.exit();
-  });
-}
-// 게임
-function playBall(randomNumber:number) {
-  rl.question("숫자를 입력해주세요: ", (userInput) => {
-    switch (userInput) {
-      case "2":
-        console.log("애플리케이션이 종료되었습니다.");
-        rl.close();
-        break;
-      default:
-        if (validateNumber(Number(userInput)) === false) {
-          console.log("1~9 중 서로 중복되지 않는 숫자 3개를 선택해주세요.\n");
-          playBall(randomNumber);
-        } else {
-          if (compareNumber(randomNumber, Number(userInput)).strike === 3) {
-            console.log("--------HOMERUN--------\n");
-            console.log("-------게임 종료-------");
-            rl.close();
-          } else {
-            const ball = compareNumber(randomNumber, Number(userInput)).ball;
-            const strike = compareNumber(randomNumber, Number(userInput)).strike;
-            console.log(`${ball}볼 ${strike}스트라이크\n`);
-            playBall(randomNumber);
-          }
-        }
-        break;
-    }
-  });
-  rl.on("close", function() {
-    process.exit();
-  });
-}
-// 숫자 검증
-function validateNumber(verification:number) {
-  const regExp = /^\d{3}$/; 
-  if (
-    !regExp.test(String(verification)) // 3자리 확인
-    || 
-    String(verification).split("").some((num) => num === "0") // 0 거르기
-    || 
-    [...new Set(String(verification))].length !== 3 // 중복값 거르기
-  ) {
-    return false;
-  } else {
-    return true;
-  }
-}
-// 랜덤 숫자 생성
-function createRandomNumber() {
-  // Math.random() => 0~1(1은 미포함) 구간에서 부동소수점의 난수를 생성
-  let comNum:number;
-  do {
-    comNum = Math.floor(Math.random() * 900 + 100);
-  } while (validateNumber(comNum) === false);
-  return comNum;
-}
-// 숫자 비교
-function compareNumber(comNum:number, userNum:number) {
-  const comNumArr = String(comNum).split("");
-  const userNumArr = String(userNum).split("");
-  const result = { strike: 0, ball: 0, noting: 0 }
-  comNumArr.map((comNum, comNumIndex) => {
-    userNumArr.some((userNum, userNumIndex) => {
-      if (userNum === comNum && userNumIndex === comNumIndex) {
-        result.strike++;
-      } else if (userNum === comNum && userNumIndex !== comNumIndex){
-        result.ball++;
-      } else {
-        result.noting++;
-      }
+import { BallNumber, Command, Computer, User } from './types';
+// 콘솔 입력 생성
+const inputInterface = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+// 명령 입력
+function inputCommand(message: string): Promise<number> {
+  return new Promise((resolve) => {
+    inputInterface.question(message, (inputValue) => {
+      resolve(parseInt(inputValue));
     });
   });
-  return result;
+}
+// 숫자 입력
+function inputNumbers(message: string): Promise<BallNumber[]> {
+  return new Promise((resolve) => {
+    inputInterface.question(message, (inputValue) => {
+      const userNumbers = inputValue.split("").map((value) => parseInt(value)) as BallNumber[];
+      resolve(userNumbers);
+    });
+  });
+}
+// 랜덤 숫자 생성
+function createRandomNumbers(): BallNumber[] {
+  const baseNumbers: BallNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const randomNumbers: BallNumber[] = baseNumbers.sort(() => Math.random() - 0.5).slice(0, 3);
+  return randomNumbers;
+}
+// 입력값 검사
+function ValidateInputNumbers(userNumbers: BallNumber[]) {
+  return (
+    // 3자리 확인
+    userNumbers.length === 3
+    &&
+    // 1~9 외의 값 확인
+    userNumbers.every((num) => num >= 1 && num <= 9)
+    &&
+    // 중복값 확인 
+    [...new Set(userNumbers)].length === 3
+  );
+}
+// 스트라이크 찾기
+function countStrike(computer : Computer, user : User) {
+  return user.numbers.filter((userNumber, index) => index === computer.numbers.indexOf(userNumber)).length;
+}
+// 볼 찾기
+function countBall(computer : Computer, user : User) {
+  return user.numbers.filter((userNumber, index) => index !== computer.numbers.indexOf(userNumber) && computer.numbers.includes(userNumber)).length;
+}
+// 숫자 비교
+function resultMessage(computer : Computer, user : User) {
+  const strikes = countStrike(computer, user);
+  const balls = countBall(computer, user);
+
+  if (strikes === 3) {
+    return "HOMERUN";
+  } else if (strikes === 0 && balls === 0) {
+    return "NOTIHING";
+  } else {
+    return `${strikes} 스트라이크 , ${balls} 볼`;
+  }
+}
+
+init();
+
+// 앱 시작
+async function init() {
+  const userCommand = await inputCommand("게임을 새로 시작하려면 1, 기록을 보려면 2, 통계를 보려면 3, 종료하려면 9을 입력하세요.\n");
+
+  switch (userCommand) {
+    case Command.start:
+      settingGame();
+      break;
+    case Command.record:
+      console.log("게임종료");
+      inputInterface.close();
+      break;
+    case Command.stats:
+      console.log("게임종료");
+      inputInterface.close();
+      break;
+    case Command.end:
+      console.log("게임종료");
+      inputInterface.close();
+      break;
+    default:
+      console.log("입력실수");
+      init();
+      break;
+  }
+}
+
+async function settingGame() {
+  const tryLimit = await inputCommand("시도 횟수를 입력해주세요.\n");
+  if (tryLimit) {
+    const computer: Computer = { numbers : createRandomNumbers() };
+    const user: User = { numbers : [], tryCount : 0, tryLimit : tryLimit }
+    playGame(computer, user);
+  } else {
+    return settingGame();
+  }
+}
+
+async function playGame(computer : Computer, user : User) {
+  if (user.tryLimit !== user.tryCount) {
+    const userNumbers: BallNumber[] = await inputNumbers("숫자를 입력해주세요 : ");
+  
+    if (ValidateInputNumbers(userNumbers)) {
+      user.numbers = userNumbers;
+      user.tryCount ++;
+      if (resultMessage(computer, user) === "HOMERUN") {
+        console.log(resultMessage(computer, user));
+        return init();
+      } else {
+        console.log(resultMessage(computer, user));
+        return playGame(computer, user);
+      }
+    } else {
+      console.log("재입력");
+      return playGame(computer, user);
+    }
+  } else {
+    console.log("컴퓨터가 승리");
+    return init();
+  }
 }
