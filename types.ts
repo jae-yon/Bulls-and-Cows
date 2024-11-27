@@ -9,6 +9,15 @@ export enum Command {
   end = 9,
 }
 
+export enum Message {
+  gameEnd = "\n==========<< 게임을 종료합니다 >>==========\n",
+  gameStart = "\n==========<< 게임을 시작합니다 >>==========\n",
+  inputError = "\n입력을 잘못했습니다!! 다시 입력해주세요.\n",
+  userNumberError = "\n===<< 1~9 사이의 숫자 중 3개를 중복없이 입력해야합니다! >>===\n",
+  userVictory = "\n축하합니다! 당신이 승리하였습니다!\n",
+  computerVictory = "회 안에 맞추지 못하였습니다. 컴퓨터가 승리하였습니다.\n",
+}
+
 export interface Computer {
   numbers: BallNumber[];
 }

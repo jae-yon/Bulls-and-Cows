@@ -1,6 +1,7 @@
 import readline from 'readline';
+import { showStats } from './stats';
 import { gameRecord, initRecord, showRecord } from './record';
-import { BallNumber, Command, Computer, User } from './types';
+import { BallNumber, Command, Computer, Message, User } from './types';
 // 콘솔 입력 생성
 const inputInterface = readline.createInterface({
   input: process.stdin,
@@ -22,6 +23,12 @@ function inputNumbers(message: string): Promise<BallNumber[]> {
       resolve(userNumbers);
     });
   });
+}
+// 날짜 구하기
+function currentTime() {
+  const TIME_ZONE = 9 * 60 * 60 * 1000;
+  const date = new Date();
+  return new Date(date.getTime() + TIME_ZONE).toISOString().replace('T', ' ').slice(0, -5);
 }
 // 랜덤 숫자 생성
 function createRandomNumbers(): BallNumber[] {
@@ -60,14 +67,8 @@ function resultMessage(computer : Computer, user : User) {
   } else if (strikes === 0 && balls === 0) {
     return "NOTIHING";
   } else {
-    return `${strikes} 스트라이크 , ${balls} 볼`;
+    return `[${strikes}]STRIKE, [${balls}]BALL`;
   }
-}
-// 날짜 구하기
-function findTime() {
-  const TIME_ZONE = 9 * 60 * 60 * 1000;
-  const date = new Date();
-  return new Date(date.getTime() + TIME_ZONE).toISOString().replace('T', ' ').slice(0, -5);
 }
 
 init();
@@ -82,34 +83,37 @@ export async function init() {
       break;
     case Command.record:
       showRecord();
+      init();
       break;
     case Command.stats:
-      console.log("게임종료");
-      inputInterface.close();
+      showStats(gameRecord);
+      init();
       break;
     case Command.end:
-      console.log("게임종료");
+      console.log(Message.gameEnd);
       inputInterface.close();
       break;
     default:
-      console.log("입력실수");
+      console.log(Message.inputError);
       init();
       break;
   }
 }
 
 async function resetGame() {
-  const tryLimit = await inputCommand("시도 횟수를 입력해주세요.\n");
+  const tryLimit = await inputCommand("[시도 횟수]를 입력해주세요.\n");
   if (tryLimit) {
     const computer: Computer = { numbers : createRandomNumbers() };
     const user: User = { numbers : [], tryCount : 0, tryLimit : tryLimit };
     gameRecord.totalGames++;
     initRecord(gameRecord.totalGames);
     gameRecord.gameResults[gameRecord.totalGames-1].tryLimit = tryLimit;
-    gameRecord.gameResults[gameRecord.totalGames-1].startTime = findTime();
+    gameRecord.gameResults[gameRecord.totalGames-1].startTime = currentTime();
     gameRecord.gameResults[gameRecord.totalGames-1].computerNumber.push(...computer.numbers);
+    console.log(Message.gameStart);
     playGame(computer, user);
   } else {
+    console.log(Message.inputError);
     return resetGame();
   }
 }
@@ -124,23 +128,24 @@ async function playGame(computer : Computer, user : User) {
       if (resultMessage(computer, user)) {
         gameRecord.gameResults[gameRecord.totalGames-1].logs.push({userNumber: user.numbers, resultMessage: resultMessage(computer, user)});
         gameRecord.gameResults[gameRecord.totalGames-1].tryCount = user.tryCount;
-        console.log(resultMessage(computer, user));
+        console.log(`\n=========<< ${resultMessage(computer, user)} >>=========`);
         if (resultMessage(computer, user) === "HOMERUN") {
           gameRecord.gameResults[gameRecord.totalGames-1].winner = "유저";
-          gameRecord.gameResults[gameRecord.totalGames-1].endTime = findTime();
+          gameRecord.gameResults[gameRecord.totalGames-1].endTime = currentTime();
+          console.log(Message.userVictory);
           return init();
         } else {
           return playGame(computer, user);
         }
       }
     } else {
-      console.log("재입력");
+      console.log(`${Message.inputError}`+`${Message.userNumberError}`);
       return playGame(computer, user);
     }
   } else {
     gameRecord.gameResults[gameRecord.totalGames-1].winner = "컴퓨터";
-    gameRecord.gameResults[gameRecord.totalGames-1].endTime = findTime();
-    console.log("컴퓨터가 승리");
+    gameRecord.gameResults[gameRecord.totalGames-1].endTime = currentTime();
+    console.log(`\n[${user.tryLimit}]`+`${Message.computerVictory}`);
     return init();
   }
 }

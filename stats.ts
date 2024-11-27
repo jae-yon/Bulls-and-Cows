@@ -4,7 +4,7 @@ export function showStats(gameRecord : GameRecord) {
   if (gameRecord.totalGames === 0) {
     console.log("\n====================\n게임 기록이 없습니다\n====================\n");
   } else {
-    console.log("\n==========게임통계==========\n");
+    console.log("\n==========<< 게임통계 >>==========\n");
 
     console.log(`유저가 입력한 최소 [시도 횟수]값 : ${getStats(gameRecord).tryLimitInfo.minLimit}회`
     +`(${getStats(gameRecord).tryLimitInfo.minId}회차 게임)\n`);
@@ -23,7 +23,7 @@ export function showStats(gameRecord : GameRecord) {
     console.log(`컴퓨터의 승리 횟수 : ${getStats(gameRecord).ratingInfo.computerWins}회\n`);
     console.log(`컴퓨터의 승률 : ${getStats(gameRecord).ratingInfo.computerRate}%`);
 
-    console.log("\n==========통계종료==========\n");
+    console.log("\n==========<< 통계종료 >>==========\n");
   }
 }
 
