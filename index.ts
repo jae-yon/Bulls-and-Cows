@@ -2,12 +2,12 @@ import readline from 'readline';
 import { showStats } from './stats';
 import { gameRecord, initRecord, showRecord } from './record';
 import { BallNumber, Command, Computer, Message, User } from './types';
-// 콘솔 입력 생성
+
 const inputInterface = readline.createInterface({
   input: process.stdin,
   output: process.stdout,
 });
-// 명령 입력
+
 function inputCommand(message: string): Promise<number> {
   return new Promise((resolve) => {
     inputInterface.question(message, (inputValue) => {
@@ -15,7 +15,7 @@ function inputCommand(message: string): Promise<number> {
     });
   });
 }
-// 숫자 입력
+
 function inputNumbers(message: string): Promise<BallNumber[]> {
   return new Promise((resolve) => {
     inputInterface.question(message, (inputValue) => {
@@ -24,59 +24,11 @@ function inputNumbers(message: string): Promise<BallNumber[]> {
     });
   });
 }
-// 날짜 구하기
-function currentTime() {
-  const TIME_ZONE = 9 * 60 * 60 * 1000;
-  const date = new Date();
-  return new Date(date.getTime() + TIME_ZONE).toISOString().replace('T', ' ').slice(0, -5);
-}
-// 랜덤 숫자 생성
-function createRandomNumbers(): BallNumber[] {
-  const baseNumbers: BallNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const randomNumbers: BallNumber[] = baseNumbers.sort(() => Math.random() - 0.5).slice(0, 3);
-  return randomNumbers;
-}
-// 입력값 검사
-function ValidateInputNumbers(userNumbers: BallNumber[]) {
-  return (
-    // 3자리 확인
-    userNumbers.length === 3
-    &&
-    // 1~9 외의 값 확인
-    userNumbers.every((num) => num >= 1 && num <= 9)
-    &&
-    // 중복값 확인 
-    [...new Set(userNumbers)].length === 3
-  );
-}
-// 스트라이크 찾기
-function countStrike(computer : Computer, user : User) {
-  return user.numbers.filter((userNumber, index) => index === computer.numbers.indexOf(userNumber)).length;
-}
-// 볼 찾기
-function countBall(computer : Computer, user : User) {
-  return user.numbers.filter((userNumber, index) => index !== computer.numbers.indexOf(userNumber) && computer.numbers.includes(userNumber)).length;
-}
-// 숫자 비교
-function resultMessage(computer : Computer, user : User) {
-  const strikes = countStrike(computer, user);
-  const balls = countBall(computer, user);
-
-  if (strikes === 3) {
-    return "HOMERUN";
-  } else if (strikes === 0 && balls === 0) {
-    return "NOTIHING";
-  } else {
-    return `[${strikes}]STRIKE, [${balls}]BALL`;
-  }
-}
 
 init();
 
-// 앱 시작
 export async function init() {
   const userCommand = await inputCommand("게임을 새로 시작하려면 1, 기록을 보려면 2, 통계를 보려면 3, 종료하려면 9을 입력하세요.\n");
-
   switch (userCommand) {
     case Command.start:
       resetGame();
@@ -147,5 +99,48 @@ async function playGame(computer : Computer, user : User) {
     gameRecord.gameResults[gameRecord.totalGames-1].endTime = currentTime();
     console.log(`\n[${user.tryLimit}]`+`${Message.computerVictory}`);
     return init();
+  }
+}
+
+function currentTime() {
+  const TIME_ZONE = 9 * 60 * 60 * 1000;
+  const date = new Date();
+  return new Date(date.getTime() + TIME_ZONE).toISOString().replace('T', ' ').slice(0, -5);
+}
+
+function createRandomNumbers(): BallNumber[] {
+  const baseNumbers: BallNumber[] = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+  const randomNumbers: BallNumber[] = baseNumbers.sort(() => Math.random() - 0.5).slice(0, 3);
+  return randomNumbers;
+}
+
+function ValidateInputNumbers(userNumbers: BallNumber[]) {
+  return (
+    userNumbers.length === 3
+    &&
+    userNumbers.every((num) => num >= 1 && num <= 9)
+    &&
+    [...new Set(userNumbers)].length === 3
+  );
+}
+
+function countStrike(computer : Computer, user : User) {
+  return user.numbers.filter((userNumber, index) => index === computer.numbers.indexOf(userNumber)).length;
+}
+
+function countBall(computer : Computer, user : User) {
+  return user.numbers.filter((userNumber, index) => index !== computer.numbers.indexOf(userNumber) && computer.numbers.includes(userNumber)).length;
+}
+
+function resultMessage(computer : Computer, user : User) {
+  const strikes = countStrike(computer, user);
+  const balls = countBall(computer, user);
+
+  if (strikes === 3) {
+    return "HOMERUN";
+  } else if (strikes === 0 && balls === 0) {
+    return "NOTIHING";
+  } else {
+    return `[${strikes}]STRIKE, [${balls}]BALL`;
   }
 }

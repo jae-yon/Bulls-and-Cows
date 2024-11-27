@@ -25,7 +25,7 @@ export function showRecord() {
     console.log("\n====================\n게임 기록이 없습니다\n====================\n");
   } else {
     console.log("\n==========<< 게임기록 >>==========\n");
-    console.log(`게임 총 횟수 : ${gameRecord.totalGames}\n`);
+    console.log(`게임 총 횟수 : ${gameRecord.totalGames}판\n`);
     gameRecord.gameResults.forEach((game) => {
       const message = `==========<< [${game.id}]째 게임 >>==========\n`
       +`\n승리한 플레이어 : ${game.winner}\n`
