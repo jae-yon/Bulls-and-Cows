@@ -71,7 +71,6 @@ async function resetGame() {
 }
 
 async function playGame(computer : Computer, user : User) {
-  console.log(gameRecord.gameResults[gameRecord.totalGames-1].computerNumber);
   if (user.tryLimit !== user.tryCount) {
     const userNumbers: BallNumber[] = await inputNumbers("숫자를 입력해주세요 : ");
     if (ValidateInputNumbers(userNumbers)) {
